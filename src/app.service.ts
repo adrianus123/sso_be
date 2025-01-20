@@ -24,8 +24,4 @@ export class AppService {
       return user;
     }
   }
-
-  getHello(): string {
-    return 'Hello World!';
-  }
 }

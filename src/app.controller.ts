@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { AppService } from './app.service';
 import { OAuth2Client } from 'google-auth-library';
+import { Response } from 'express';
+import axios from 'axios';
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -27,8 +29,36 @@ export class AppController {
     }
   }
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get("/callback")
+  async handleCallback(@Query("code") code: string, @Res() res: Response) {
+    try {
+      const tokenResponse = await axios.post(process.env.TOKEN_URL, {
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: `${process.env.API_URL}/callback`
+      });
+
+      const {access_token, id_token} = tokenResponse.data
+
+      res.cookie('access_token', access_token, {
+        httpOnly: false,
+        secure: true,
+        maxAge: 3600000
+      })
+
+      res.cookie('id_token', id_token, {
+        httpOnly: false,
+        secure: true,
+        maxAge: 3600000
+      })
+
+      res.redirect(process.env.CLIENT_URL)
+      
+    } catch (error) {
+      console.error(error);
+      
+    }
   }
 }
