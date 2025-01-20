@@ -40,25 +40,36 @@ export class AppController {
         redirect_uri: `${process.env.API_URL}/callback`
       });
 
-      const {access_token, id_token} = tokenResponse.data
+      const { access_token, id_token } = tokenResponse.data
 
       res.cookie('access_token', access_token, {
         httpOnly: false,
         secure: true,
-        maxAge: 3600000
+        maxAge: 3600 * 1000  // in ms
       })
 
       res.cookie('id_token', id_token, {
         httpOnly: false,
         secure: true,
-        maxAge: 3600000
+        maxAge: 3600 * 1000 // in ms
       })
 
       res.redirect(process.env.CLIENT_URL)
-      
     } catch (error) {
       console.error(error);
-      
+    }
+  }
+
+  @Get("/verify")
+  async verify(@Query('token') token: string): Promise<any> {
+    try {
+      const data = await this.appService.validateToken(token)
+      return {
+        data: data,
+        message: "success"
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 }
