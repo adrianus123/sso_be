@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { OAuth2Client } from 'google-auth-library';
 import { Response } from 'express';
@@ -43,15 +43,21 @@ export class AppController {
       const { access_token, id_token } = tokenResponse.data
 
       res.cookie('access_token', access_token, {
+        // domain: '.localhost',
+        // path: '/',
         httpOnly: false,
         secure: true,
-        maxAge: 3600 * 1000  // in ms
+        maxAge: 3600 * 1000,  // in ms
+        // sameSite: 'lax'
       })
 
       res.cookie('id_token', id_token, {
+        // domain: '.localhost',
+        // path: '/',
         httpOnly: false,
         secure: true,
-        maxAge: 3600 * 1000 // in ms
+        maxAge: 3600 * 1000, // in ms
+        // sameSite: 'lax'
       })
 
       res.redirect(process.env.CLIENT_URL)
@@ -65,11 +71,29 @@ export class AppController {
     try {
       const data = await this.appService.validateToken(token)
       return {
+        status: HttpStatus.OK,
         data: data,
         message: "success"
       }
     } catch (error) {
       console.error(error);
+      return error
+    }
+  }
+
+  @Get("/logout")
+  @UseGuards()
+  async logout(@Req() request): Promise<any> {
+    const token = request.headers.authorization.split(' ')[1]
+    try {
+      await this.appService.revokeToken(token)
+      return {
+        status: HttpStatus.NO_CONTENT,
+        data: null,
+        message: "success"
+      }
+    } catch (error) {
+      return error
     }
   }
 }

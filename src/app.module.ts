@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './users/user.schema';
 import { JwtModule } from '@nestjs/jwt';
+import { TokenBlacklists, TokenBlacklistsSchema } from './users/token-blacklist.schema';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
       global: true
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }, { name: TokenBlacklists.name, schema: TokenBlacklistsSchema }])
   ],
   controllers: [AppController],
   providers: [AppService],
